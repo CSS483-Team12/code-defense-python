@@ -8,37 +8,54 @@ def get_valid_name(prompt):
         name = input(prompt)
         if len(name) <= 50 and re.match("^[A-Z][a-z]+$", name):
             return name
-        else:
-            print("Invalid input. Please enter up to 50 alphabetic characters and spaces.")
+        print("Invalid input. Please enter up to 50 alphabetic characters and spaces.")
 
 def get_valid_int(prompt):
     while True:
-        try:
-            value = int(input(prompt))
+        value = int(input(prompt))
+        if -2147483648 <= value <= 2147483648:
             return value
-        except ValueError:
-            print("Invalid input. Please enter a 4-byte integer value.")
+        print("Invalid input. Please enter a 4-byte integer value range in -2,147,483,648 and 2,147,483,647.")
 
-def get_valid_filename(prompt):
+def get_valid_input_filename(prompt):
+    while True:
+        filename = input(prompt)
+        
+        if filename and len(filename) < 255: # assuming a typical max path length
+            if os.path.exists(filename):
+                return filename
+            print("Input file do not exist. Please retry.  ")
+        else:
+            print("Invalid filename. Please ensure it is not empty and is shorter than 255 characters.")
+            
+def get_valid_output_filename(prompt):
     while True:
         filename = input(prompt)
         if filename and len(filename) < 255: # assuming a typical max path length
             return filename
-        else:
-            print("Invalid filename. Please ensure it is not empty and is shorter than 255 characters.")
+        print("Invalid filename. Please ensure it is not empty and is shorter than 255 characters.")
 
 def get_password():
     while True:
         password = input("Enter a password: ")
-        confirm_password = input("Re-enter your password: ")
-        if password == confirm_password:
-            return password
-        else:
+        
+        salt_file = "salt.bin"
+        with open(salt_file, 'rb') as file:
+            salt = file.read()
+        
+        while True:
+            confirm_password = input("Re-enter your password: ")
+            hashed_password = hash_password(password, salt)
+            hashed_confirm_password = hash_password(confirm_password, salt)
+            
+            if hashed_password == hashed_confirm_password:
+                with open("password.bin", 'wb') as file:
+                    file.write(hashed_password)
+                return
             print("Passwords do not match. Please try again.")
 
-def hash_password(password):
-    salt = os.urandom(16)
-    return hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 100000), salt
+def hash_password(password, salt):
+    return hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 100000)
 
 def write_to_file(output_file, content):
     with open(output_file, 'w') as f:
@@ -48,13 +65,12 @@ def write_to_file(output_file, content):
 def main():
     first_name = get_valid_name("Enter your first name: ")
     last_name = get_valid_name("Enter your last name: ")
-    int1 = get_valid_int("Enter the first integer: ")
-    int2 = get_valid_int("Enter the second integer: ")
-    input_filename = get_valid_filename("Enter the name of the input file: ")
-    output_filename = get_valid_filename("Enter the name of the output file: ")
+    int1 = get_valid_int("Enter the first integer, range in -2,147,483,648 and 2,147,483,647: ")
+    int2 = get_valid_int("Enter the second integer, range in -2,147,483,648 and 2,147,483,647: ")
+    input_filename = get_valid_input_filename("Enter the name of the input file, 255 chars limit, file has to exist: ")
+    output_filename = get_valid_output_filename("Enter the name of the output file, 255 chars limit: ")
     
-    password = get_password()
-    hashed_password, salt = hash_password(password)
+    get_password()
     
     # Assuming no overflow, as per requirement. For safety, consider checking or using larger data types
     sum_of_ints = int1 + int2
@@ -79,10 +95,6 @@ def main():
         sys.exit(1)
 
     write_to_file(output_filename, content_to_write)
-    
-    # Write hashed password to file (demonstration purpose, normally you'd store this securely)
-    with open('password_hash.bin', 'wb') as f:
-        f.write(salt + hashed_password)
 
     print("Information has been successfully written to the output file.")
 
