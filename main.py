@@ -6,7 +6,7 @@ import sys
 def get_valid_name(prompt):
     while True:
         name = input(prompt)
-        if len(name) <= 50 and re.match("^[A-Z][a-z]+$", name):
+        if len(name) <= 50 and re.match("^[A-Za-z][a-z]+$", name):
             return name
         print("Invalid input. Please enter up to 50 alphabetic characters and spaces.")
 
@@ -21,17 +21,17 @@ def get_valid_input_filename(prompt):
     while True:
         filename = input(prompt)
         
-        if filename and len(filename) < 255: # assuming a typical max path length
-            if os.path.exists(filename):
+        if filename and len(filename) < 255 and re.match("^[a-zA-Z0-9_-]+(?:\s[a-zA-Z0-9_-]+)*$", filename): 
+            if os.path.exists(filename + ".txt"):
                 return filename
             print("Input file do not exist. Please retry.  ")
         else:
-            print("Invalid filename. Please ensure it is not empty and is shorter than 255 characters.")
+            print("Invalid filename. Please ensure it is not empty, no dot and is shorter than 255 characters.")
             
 def get_valid_output_filename(prompt):
     while True:
         filename = input(prompt)
-        if filename and len(filename) < 255: # assuming a typical max path length
+        if filename and len(filename) < 255:
             return filename
         print("Invalid filename. Please ensure it is not empty and is shorter than 255 characters.")
 
@@ -67,12 +67,11 @@ def main():
     last_name = get_valid_name("Enter your last name: ")
     int1 = get_valid_int("Enter the first integer, range in -2,147,483,648 and 2,147,483,647: ")
     int2 = get_valid_int("Enter the second integer, range in -2,147,483,648 and 2,147,483,647: ")
-    input_filename = get_valid_input_filename("Enter the name of the input file, 255 chars limit, file has to exist: ")
+    input_filename = get_valid_input_filename("Enter the name of the input file, 255 chars limit, file has to exist, accept text file only: ")
     output_filename = get_valid_output_filename("Enter the name of the output file, 255 chars limit: ")
     
     get_password()
     
-    # Assuming no overflow, as per requirement. For safety, consider checking or using larger data types
     sum_of_ints = int1 + int2
     product_of_ints = int1 * int2
     
@@ -87,6 +86,7 @@ def main():
         "Input File Contents": ""
     }
     
+    # Just for safety, it should never run into error
     try:
         with open(input_filename, 'r') as f:
             content_to_write["Input File Contents"] = f.read()
