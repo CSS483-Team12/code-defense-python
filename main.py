@@ -31,9 +31,12 @@ def get_valid_input_filename(prompt):
 def get_valid_output_filename(prompt):
     while True:
         filename = input(prompt)
-        if filename and len(filename) < 255:
-            return filename
-        print("Invalid filename. Please ensure it is not empty and is shorter than 255 characters.")
+        if filename and len(filename) < 255 and re.match("^[a-zA-Z0-9_-]+(?:\s[a-zA-Z0-9_-]+)*$", filename):
+            if not os.path.exists(filename + ".txt"):
+                return filename
+            print("File already exists. Please choose another name")
+        else:
+            print("Invalid filename. Please ensure it is not empty and is shorter than 255 characters.")
 
 def get_password():
     while True:
@@ -67,7 +70,7 @@ def main():
     last_name = get_valid_name("Enter your last name: ")
     int1 = get_valid_int("Enter the first integer, range in -2,147,483,648 and 2,147,483,647: ")
     int2 = get_valid_int("Enter the second integer, range in -2,147,483,648 and 2,147,483,647: ")
-    input_filename = get_valid_input_filename("Enter the name of the input file, 255 chars limit, file has to exist, accept text file only: ")
+    input_filename = get_valid_input_filename("Enter the name of the input file without extension, 255 chars limit, file has to exist, accept text file only, : ")
     output_filename = get_valid_output_filename("Enter the name of the output file, 255 chars limit: ")
     
     get_password()
